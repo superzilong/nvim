@@ -12,11 +12,32 @@ set splitright
 set cursorline
 set ignorecase
 set smartcase
-set formatoptions-=cro
+" set formatoptions-=cro
+set scrolloff=4
 "set paste
-set clipboard=unnamedplus               " Copy paste between vim and everything else
+"set clipboard=unnamedplus               " Copy paste between vim and everything else
+" Tip: use "+ to use the + register to copy and paste in system clipboard
+" Copy to system clipboard
+vnoremap Y "+y
 " You can't stop me
 cmap w!! w !sudo tee %
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" 代码缩进与排版
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set autoindent      "设置自动缩进
+set cindent     "设置使用C/C++语言的自动缩进方式
+set cinoptions=g0,:0,N-s,(0 "设置使用C/C++语言的具体缩进方式
+set smartindent     "智能选择对齐方式
+filetype indent on  "自适应不同语言的智能缩进
+set expandtab       "将制表符扩展为空格
+set tabstop=4       "设置编辑时制表符所占的空格数
+set shiftwidth=4    "设置格式化时制表符占用的空格数
+set softtabstop=4       "设置4个空格为制表符
+set smarttab        "在行和段开始处使用制表符
+"set nowrap     "禁止折行
+set backspace=2     "使用回车键正常处理indent.eol,start等
+
 
 " short keys
 let mapleader = " "
@@ -30,7 +51,8 @@ noremap <leader>j <C-w>j
 noremap <leader>k <C-w>k
 noremap <leader>l <C-w>l
 nmap tt :CocCommand explorer<CR>
-
+" close all buffers but this one
+nnoremap <leader>d :w <bar> %bd <bar> e# <bar> bd# <CR> 
 " auto-install vim-plug
 if empty(glob('~/.config/nvim/autoload/plug.vim'))
   silent !curl -fLo ~/.config/nvim/autoload/plug.vim --create-dirs
@@ -61,6 +83,10 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " Or build from source code by using yarn: https://yarnpkg.com
 Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 
+Plug 'brooth/far.vim'
+
+Plug 'tomtom/tcomment_vim' " in <space>cn to comment a line
+
 call plug#end()
 
 " Automatically install missing plugins on startup
@@ -71,9 +97,12 @@ autocmd VimEnter *
 
 " theme setting
 "set term=screen-256color
-"set t_ut=
+let &t_ut=''
 "set background=dark
+"let g:solarized_termcolors=256
 colorscheme deus
+
+
 
 " lightline setting
 let g:lightline = {
@@ -113,30 +142,30 @@ noremap <C-p> :Files<CR>
 " coc setting
 
 let g:coc_global_extensions = [
-	"\ 'coc-actions',
-	"\ 'coc-css',
-	"\ 'coc-diagnostic',
+	\ 'coc-actions',
+	\ 'coc-css',
+	\ 'coc-diagnostic',
 	\ 'coc-explorer',
-	"\ 'coc-flutter-tools',
-	"\ 'coc-gitignore',
+	\ 'coc-flutter-tools',
+	\ 'coc-gitignore',
 	\ 'coc-html',
 	\ 'coc-json',
-	"\ 'coc-lists',
-	"\ 'coc-prettier',
-	"\ 'coc-pyright',
-	"\ 'coc-python',
-	"\ 'coc-snippets',
-	"\ 'coc-sourcekit',
-	"\ 'coc-stylelint',
-	"\ 'coc-syntax',
-	"\ 'coc-tasks',
+	\ 'coc-lists',
+	\ 'coc-prettier',
+	\ 'coc-pyright',
+	\ 'coc-python',
+	\ 'coc-snippets',
+	\ 'coc-sourcekit',
+	\ 'coc-stylelint',
+	\ 'coc-syntax',
+	\ 'coc-tasks',
 	\ 'coc-todolist',
 	\ 'coc-translator',
-	"\ 'coc-tslint-plugin',
-	"\ 'coc-tsserver',
+	\ 'coc-tslint-plugin',
+	\ 'coc-tsserver',
 	\ 'coc-vimlsp',
-	"\ 'coc-vetur',
-	"\ 'coc-yaml',
+	\ 'coc-vetur',
+	\ 'coc-yaml',
 	\ 'coc-go',
 	\ 'coc-yank']
 " TextEdit might fail if hidden is not set.
@@ -168,19 +197,36 @@ endif
 " Use tab for trigger completion with characters ahead and navigate.
 " NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
 " other plugin before putting this into your config.
+" inoremap <silent><expr> <TAB>
+"       \ pumvisible() ? "\<C-n>" :
+"       \ <SID>check_back_space() ? "\<TAB>" :
+"       \ coc#refresh()
+" inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+" 
+" function! s:check_back_space() abort
+"   let col = col('.') - 1
+"   return !col || getline('.')[col - 1]  =~# '\s'
+" endfunction
+
 inoremap <silent><expr> <TAB>
-      \ pumvisible() ? "\<C-n>" :
+      \ pumvisible() ? coc#_select_confirm() :
+      \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
       \ <SID>check_back_space() ? "\<TAB>" :
       \ coc#refresh()
-inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
 function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~# '\s'
+	let col = col('.') - 1
+	return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
+let g:coc_snippet_next = '<tab>'
+let g:coc_snippet_prev = '<s-tab>'
+
+inoremap <expr> <C-j> pumvisible() ? "\<C-n>" : "\<C-j>"
+inoremap <expr> <C-k> pumvisible() ? "\<C-p>" : "\<C-k>"
+
 " Use <c-c> to trigger completion.
-inoremap <silent><expr> <c-o> coc#refresh()
+inoremap <silent><expr> <c-space> coc#refresh()
 
 
 " Use <cr> to confirm completion, `<C-g>u` means break undo chain at current
@@ -289,3 +335,38 @@ nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
 nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+" Coc yank short key
+nnoremap <silent> <space>y  :<C-u>CocList -A --normal yank<cr>
+
+" ===
+" === Far.vim
+" ===
+set lazyredraw            " improve scrolling performance when navigating through large results
+noremap <silent> <c-s>  :Farf<cr>
+"noremap <silent> <c-s-h>  :Farr<cr>
+"noremap <m-f> :F  **/*<left><left><left><left><left>
+let g:far#mapping = {
+		\ "replace_do" : ["s"],
+		\ "replace_undo" : ["u"],
+		\ }
+let g:far#enable_undo=1
+" let g:far#prompt_mapping = 
+" {'word': {'key': '<c-w>', 'prompt': '^W'}, 'case_sensitive': {'key': '<c-c>', 'prompt': '^C'}, 'regex': {'key': '<c-x>', 'prompt': '^X'}, 'quit': {'key': '<esc>', 'prompt': 'Esc'}, 'substitute': {'key': '<c-s>', 'prompt': '^S'}}
+
+" ===
+" === tcomment_vim
+" ===
+" echo g:tcomment_mapleader1
+" echo g:tcomment_mapleader2
+" nnoremap ci cl
+" let g:tcomment_textobject_inlinecomment = ''
+" nmap <LEADER>c g>c
+" vmap <LEADER>cn g>
+" nmap <LEADER>cu g<c
+" vmap <LEADER>cu g<
+
+
+" Add this line to avoid add comment automatically when add new lines
+" Reference: https://vi.stackexchange.com/questions/9366/set-formatoptions-in-vimrc-is-being-ignored
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+
