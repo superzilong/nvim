@@ -50,6 +50,10 @@ noremap <leader>h <C-w>h
 noremap <leader>j <C-w>j
 noremap <leader>k <C-w>k
 noremap <leader>l <C-w>l
+noremap <s-j> 5j
+noremap <s-k> 5k
+noremap <s-h> ^
+noremap
 nmap tt :CocCommand explorer<CR>
 " close all buffers but this one
 nnoremap <leader>d :w <bar> %bd <bar> e# <bar> bd# <CR> 
@@ -86,6 +90,8 @@ Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
 Plug 'brooth/far.vim'
 
 Plug 'tomtom/tcomment_vim' " in <space>cn to comment a line
+
+Plug 'jiangmiao/auto-pairs'
 
 call plug#end()
 
